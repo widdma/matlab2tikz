@@ -438,7 +438,30 @@ function a = featureArea(x,y)
     %Heapify the 'heap' array based on the area, using Floyd's alg
     root = bitshift(len,-1); %starting with the first parent node
     while root >= 1
-        down(root);
+        % down(root);
+        i = root;
+        while 2*i  <= len %while the i has a child
+            lchild = 2*i;
+            rchild = lchild+1;
+            % Find the minimum of the i and its children
+            minimum = i;
+            if a(heap(lchild)) < a(heap(minimum))
+                minimum = lchild;
+            end
+            if rchild <= len && (a(heap(rchild)) < a(heap(minimum)))
+                minimum = rchild;
+            end
+
+            if minimum == i
+                % if the i is the minimum, then we're done
+                break
+            else
+                % otherwise, swap the i and its minimum child and continue
+                pos(heap([i,minimum])) = [minimum,i];
+                heap([i,minimum]) = heap([minimum,i]);
+                i = minimum;
+            end
+        end
         root = root-1;
     end
 
@@ -454,38 +477,19 @@ function a = featureArea(x,y)
         end
 
         % remove smallest element from heap
-        e = pop(1);
+        % e = pop(1);
 
-        % remove that element from linked list
-        left = linkedList(e,1);
-        right = linkedList(e,2);
-        linkedList(left,2) = linkedList(e,2);
-        linkedList(right,1) = linkedList(e,1);
+        e = heap(1);
 
+        %Swap the first and the last
+        pos(heap([1,len])) = [len,1];
+        heap([1,len]) = heap([len,1]);
 
-        %Update area of neighbouring points if they're not the ends points
-        if linkedList(left,1) > 0
-            a(left) = area(linkedList(left,1),left,linkedList(left,2));
-            pop(pos(left));
-            push();
-        end
+        %Remove the last element from the heap
+        len = len-1;
 
-        if linkedList(right,2) > 0
-            a(right) = area(linkedList(right,1),right,linkedList(right,2));
-            pop(pos(right));
-            push();
-        end
-    end
-
-    %Update the last element on the heap
-    if numel(heap) >0 &&  a(heap(1)) < maxArea
-        a(heap(1)) = maxArea;
-    end
-
-    % Heap utility functions
-    function down(root)
-        % Move element at "root" down the heap, assuming the heap property
-        % is satisfied for the rest of the tree
+        %down(1);
+        root = 1;
         while 2*root  <= len %while the root has a child
             lchild = 2*root;
             rchild = lchild+1;
@@ -508,44 +512,115 @@ function a = featureArea(x,y)
                 root = minimum;
             end
         end
-    end
 
-    function up(child)
-        %Move element up the heap until it finds the correct position
-        while child > 1
-            parent = bitshift(n,-1);
-            if a(heap(child)) < a(heap(parent))
-                % If this element is less than its parent, swap them
-                pos(heap([parent,child])) = [child,parent];
-                heap([parent,child]) = heap([child,parent]);
-                child = parent;
-            else
-                %Otherwise the heap property is restored
-                break
+        % remove that element from linked list
+        left = linkedList(e,1);
+        right = linkedList(e,2);
+        linkedList(left,2) = linkedList(e,2);
+        linkedList(right,1) = linkedList(e,1);
+
+
+        %Update area of neighbouring points if they're not the ends points
+        if linkedList(left,1) > 0
+            a(left) = area(linkedList(left,1),left,linkedList(left,2));
+
+            %Remove the 'left' element from the heap, then add it back on
+            i = pos(left);
+            pos(heap([i,len])) = [len,i];
+            heap([i,len]) = heap([len,i]);
+            len = len-1;
+            % down(i);
+            root = i;
+            while 2*root  <= len %while the root has a child
+                lchild = 2*root;
+                rchild = lchild+1;
+                % Find the minimum of the root and its children
+                minimum = root;
+                if a(heap(lchild)) < a(heap(minimum))
+                    minimum = lchild;
+                end
+                if rchild <= len && (a(heap(rchild)) < a(heap(minimum)))
+                    minimum = rchild;
+                end
+
+                if minimum == root
+                    % if the root is the minimum, then we're done
+                    break
+                else
+                    % otherwise, swap the root and its minimum child and continue
+                    pos(heap([root,minimum])) = [minimum,root];
+                    heap([root,minimum]) = heap([minimum,root]);
+                    root = minimum;
+                end
+            end
+
+            % push();
+            len = len+1;
+            % up(len);
+            child = len;
+            while child > 1
+                parent = bitshift(n,-1);
+                if a(heap(child)) < a(heap(parent))
+                    % If this element is less than its parent, swap them
+                    pos(heap([parent,child])) = [child,parent];
+                    heap([parent,child]) = heap([child,parent]);
+                    child = parent;
+                else
+                    %Otherwise the heap property is restored
+                    break
+                end
+            end
+        end
+
+        if linkedList(right,2) > 0
+            a(right) = area(linkedList(right,1),right,linkedList(right,2));
+            i = pos(right);
+            pos(heap([i,len])) = [len,i];
+            heap([i,len]) = heap([len,i]);
+            len = len-1;
+            root = i;
+            while 2*root  <= len %while the root has a child
+                lchild = 2*root;
+                rchild = lchild+1;
+                minimum = root;
+                if a(heap(lchild)) < a(heap(minimum))
+                    minimum = lchild;
+                end
+                if rchild <= len && (a(heap(rchild)) < a(heap(minimum)))
+                    minimum = rchild;
+                end
+                if minimum == root
+                    break
+                else
+                    % otherwise, swap the root and its minimum child and continue
+                    pos(heap([root,minimum])) = [minimum,root];
+                    heap([root,minimum]) = heap([minimum,root]);
+                    root = minimum;
+                end
+            end
+
+            % push();
+            len = len+1;
+            % up(len);
+            child = len;
+            while child > 1
+                parent = bitshift(n,-1);
+                if a(heap(child)) < a(heap(parent))
+                    % If this element is less than its parent, swap them
+                    pos(heap([parent,child])) = [child,parent];
+                    heap([parent,child]) = heap([child,parent]);
+                    child = parent;
+                else
+                    %Otherwise the heap property is restored
+                    break
+                end
             end
         end
     end
 
-    function e = pop(i)
-        % Remove element at position i off the heap and return its value
-
-        e = heap(i);
-
-        %Swap the first and the last
-        pos(heap([i,len])) = [len,i];
-        heap([i,len]) = heap([len,i]);
-
-        %Remove the last element from the heap
-        len = len-1;
-
-        %Move the new ith element down the heap until it finds the correct spot
-        down(i);
-    end
-
-    function push()
-        % Add the element at len+1 in the 'heap' array back into the heap
-        len = len+1;
-        up(len);
+    %Update the last element on the heap
+    if numel(heap) >0 &&  a(heap(1)) < maxArea
+        a(heap(1)) = maxArea;
     end
 end
 % =========================================================================
